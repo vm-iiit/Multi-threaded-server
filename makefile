@@ -1,2 +1,2 @@
 all:
-	g++ main.cpp threadpool.h -o main.out -pthread
+	g++ server.cpp threadpool.h req_generator.cpp -o main.out -pthread

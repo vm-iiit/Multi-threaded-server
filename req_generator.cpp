@@ -3,23 +3,39 @@
 #include <stdlib.h> 
 #include <string.h> 
 #include <sys/socket.h> 
+#include<unistd.h>
+#include<arpa/inet.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<iostream>
+// #include<dos.h>
+// #include"threadpool.h"
 #define MAX 80 
-#define PORT 8080 
+#define PORT 6584 
 #define SA struct sockaddr 
-void func(int sockfd) 
+using namespace std;
+
+int sockfd, connfd; 
+struct sockaddr_in servaddr, cli; 
+
+void func(int sockfd, int counter) 
 { 
 	char buff[MAX]; 
 	int n; 
-	for (;;) { 
+	int i=1;
+	while(i--){ 
 		bzero(buff, sizeof(buff)); 
-		printf("Enter the string : "); 
+		// printf("Enter the string : "); 
 		n = 0; 
-		while ((buff[n++] = getchar()) != '\n') 
-			; 
-		write(sockfd, buff, sizeof(buff)); 
+		// while ((buff[n++] = getchar()) != '\n') 
+		// 	; 
+				cout<<"sending to server"<<counter<<endl;
+
+		write(sockfd, &counter, sizeof(counter)); 
 		bzero(buff, sizeof(buff)); 
 		read(sockfd, buff, sizeof(buff)); 
-		printf("From Server : %s", buff); 
+		printf("From Server : %s %d", buff, counter); 
+
 		if ((strncmp(buff, "exit", 4)) == 0) { 
 			printf("Client Exit...\n"); 
 			break; 
@@ -27,10 +43,26 @@ void func(int sockfd)
 	} 
 } 
 
+void *connect_func(void *arg)
+{
+	int counter = *(int*) arg;
+	cout<<"req number "<<counter<<"\n";
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) 
+	{ 
+		printf("connection with the server failed...\n"); 
+		exit(0); 
+	} 
+	// else
+	// 	printf("connected to the server..\n"); 
+
+
+	func(sockfd, counter);
+}
+
 int main() 
 { 
-	int sockfd, connfd; 
-	struct sockaddr_in servaddr, cli; 
+	
 
 	// socket create and varification 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
@@ -48,15 +80,26 @@ int main()
 	servaddr.sin_port = htons(PORT); 
 
 	// connect the client socket to server socket 
-	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
-		printf("connection with the server failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("connected to the server..\n"); 
+
+	pthread_t client_thread[1000];
+	int counter = 1;
+	while(counter < 100)
+	{
+		// sleep(.1);
+
+		int local = counter;
+		// cout<<"sending to connect"<<local<<endl;
+		pthread_create(&client_thread[counter], NULL, connect_func, &local);
+
+		
+		++counter; 
+
+	}
+
+	
 
 	// function for chat 
-	func(sockfd); 
+	
 
 	// close the socket 
 	close(sockfd); 
