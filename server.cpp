@@ -5,7 +5,7 @@
 #include<string.h>
 #define PORT 6584
 // #include<pthread.h>
-
+using namespace std;
 queue<int> request;
 
 // struct dispatch_args
@@ -18,7 +18,7 @@ queue<int> request;
 // };
 
 
-
+// mutex mtx;
 
 void *thread_worker(void * soc)
 {
@@ -58,10 +58,12 @@ void* dispatch_helper(void* args)
 	{
     	if(request.size())
     	{
-            cout<<"\ninside dispatch_helper\n";
+            // cout<<"\ninside dispatch_helper\n";
 
         	int socid = request.front();
+            mtx.lock();
         	request.pop();
+            mtx.unlock();
             // cout<<"dispatch called from helper\n";
 	        pthread_t nt = dispatch(*obj);
             // cout<<"returned from diparch\n";
@@ -77,6 +79,8 @@ void* dispatch_helper(void* args)
 	    }
 	}
 }
+
+
 
 int main()
 {
@@ -134,14 +138,24 @@ int main()
    
     pthread_create(&dispatcher,NULL,dispatch_helper, test_pool);
     cout<<"dispatch helper started\n";
+    int conn = 0;
     while(1) 
     {       
-        new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen);     
+        new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen);
+        cout<<"connection "<<++conn<<" accpeted\n";     
            // dispatch(test_pool,thread_worker,(void *)new_socket);
-           request.push(new_socket);
-           cout<<"size of request queue "<<request.size()<<endl;
-           cout<<"size of threadpool "<<test_pool->threads<<endl;
-            cout<<"size of free thread queue "<<test_pool->free_threads.size()<<endl;
+
+            
+             mtx.lock();
+            request.push(new_socket);
+            mtx.unlock();
+
+            cout<<"size of request queue "<<request.size()<<endl;
+            cout<<"size of threadpool "<<test_pool->threads<<endl;
+             cout<<"size of free thread queue "<<test_pool->free_threads.size()<<endl;
+        
+            
+           
     }
 
     cout<<"server terminating\n";

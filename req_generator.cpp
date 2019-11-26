@@ -13,6 +13,7 @@
 #define MAX 80 
 #define PORT 6584 
 #define SA struct sockaddr 
+#define max_requests 50
 using namespace std;
 
 int sockfd, connfd; 
@@ -83,12 +84,13 @@ int main()
 
 	pthread_t client_thread[1000];
 	int counter = 1;
-	while(counter < 100)
+	while(counter <= max_requests)
 	{
-		// sleep(.1);
+		sleep(1);
 
 		int local = counter;
 		// cout<<"sending to connect"<<local<<endl;
+		// sleep(1);
 		pthread_create(&client_thread[counter], NULL, connect_func, &local);
 
 		

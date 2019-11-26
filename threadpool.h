@@ -21,7 +21,7 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
-
+#include<mutex>
 #include<fcntl.h>
 
 #define expand_threshold 0.00001
@@ -41,20 +41,25 @@ struct pack
 	pthread_t thread_id;
 };
 
+mutex mtx;
+
 
 threadpool *create_threadpool(int num_threads = default_threads)
 {
 	threadpool *new_pool = new threadpool();
 	new_pool->threads = num_threads;
 	
+	mtx.lock();
 	while(new_pool->free_threads.size())
 		new_pool->free_threads.pop();
+	
 
 	for(int lv = 1; lv <= num_threads; lv++)
 	{
 		pthread_t new_thread;
 		new_pool->free_threads.push(new_thread);
 	}
+	mtx.unlock();
 	// cout<<"address of returned pool "<<&new_pool<<endl;
 	return new_pool;
 }
@@ -62,11 +67,13 @@ threadpool *create_threadpool(int num_threads = default_threads)
 void expand_pool(threadpool& tp, int new_size)
 {
 	cout<<"expandig threadpool from "<<tp.threads<<" to "<<new_size<<endl;
+	mtx.lock();
 	for(int lv=1; lv <= new_size - tp.threads; lv++)
 	{
 		pthread_t nt;
 		tp.free_threads.push(nt);
 	}
+	mtx.unlock();
 	tp.threads = new_size;
 }
 
@@ -90,8 +97,9 @@ pthread_t dispatch(threadpool& from_me)
     pthread_t ft = from_me.free_threads.front();
     // cout<<"popped out thread id "<<ft<<endl;
     // cout<<" thread id at front "<<from_me.free_threads.front()<<endl;
+    mtx.lock();
     from_me.free_threads.pop();
-
+    mtx.unlock();
     return ft;
 }
 
