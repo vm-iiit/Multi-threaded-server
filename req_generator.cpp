@@ -13,7 +13,7 @@
 #define MAX 80 
 #define PORT 6584 
 #define SA struct sockaddr 
-#define max_requests 50
+#define max_requests 500
 using namespace std;
 
 int sockfd, connfd; 
@@ -86,8 +86,8 @@ int main()
 	int counter = 1;
 	while(counter <= max_requests)
 	{
-		sleep(1);
-
+		//sleep(1);
+        usleep(int(1e5));
 		int local = counter;
 		// cout<<"sending to connect"<<local<<endl;
 		// sleep(1);

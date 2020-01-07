@@ -23,7 +23,7 @@ queue<int> request;
 void *thread_worker(void * soc)
 {
 	int new_socket = *(int *) soc;
-    sleep(5);
+    sleep(10);
 	char buffer[1024] = {0}; 
     int integer;
     char *hello = "Hello from server"; 
@@ -38,12 +38,14 @@ void *thread_worker(void * soc)
 void *wait(void *tid)
 {
 
-	pack new_p = *(pack *)tid;
-    // cout<<"mem address inside wait "<<&(*new_p.tp)<<endl;
-	if(pthread_join(new_p.thread_id, NULL))
+	pack *new_p = (pack *)tid;
+    //cout<<"mem address inside wait "<<&(new_p->tp)<<endl;
+	if(!pthread_join(new_p->thread_id, NULL))
 	{
-        // cout<<"pushed back free thread "<<new_p.thread_id<<endl;
-        new_p.tp->free_threads.push(new_p.thread_id);
+        cout<<"pushed back free thread "<<endl;//<<new_p->thread_id<<endl;
+        new_p->tp->free_threads.push(new_p->thread_id);
+		cout<<"\nsize after push "<<new_p->tp->free_threads.size()<<endl;
+
     }
 	return NULL;
 }

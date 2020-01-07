@@ -24,7 +24,7 @@
 #include<mutex>
 #include<fcntl.h>
 
-#define expand_threshold 0.00001
+#define expand_threshold 1
 #define default_threads 10
 
 using namespace std;
